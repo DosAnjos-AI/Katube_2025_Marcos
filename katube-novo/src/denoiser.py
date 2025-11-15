@@ -7,7 +7,7 @@ class Denoiser:
         """
         Inicializa o Denoiser com o modelo DeepFilterNet.
         """
-        self.device = device if device else ("cuda" if torch.cuda.is_available() else "cpu")
+        self.device = device if device else "cpu"
         self.state, self.df_model, self.model_name = init_df(model_name)
         self.df_sr = 48000  # DeepFilterNet sempre usa 48 kHz
         print(f"[INFO] Modelo {self.model_name} carregado no dispositivo: {self.device}")

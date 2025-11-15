@@ -39,14 +39,13 @@ class AudioProcessingPipeline:
     6. Prepare for STT processing
     """
     
-    def __init__(self, 
+    def __init__(self,
                  output_base_dir: Optional[Path] = None,
                  huggingface_token: Optional[str] = None,
                  segment_min_duration: float = 10.0,
                  segment_max_duration: float = 15.0,
                  mos_threshold: float = 2.5,
-                 enable_mos_filter: bool = True,
-                 use_cuda: bool = False):
+                 enable_mos_filter: bool = True):
         
         # Set up directories
         self.output_base_dir = output_base_dir or Config.OUTPUT_DIR
@@ -73,8 +72,7 @@ class AudioProcessingPipeline:
         
         try:
             self.mos_filter = MOSQualityFilter(
-                mos_threshold=mos_threshold,
-                use_cuda=use_cuda
+                mos_threshold=mos_threshold
             )
             logger.info("✅ Filtro MOS inicializado com sucesso")
         except Exception as e:
@@ -95,7 +93,7 @@ class AudioProcessingPipeline:
             # Initialize Whisper STT
             self.whisper_stt = WhisperSTTTranscriber(
                 whisper_model_name="freds0/distil-whisper-large-v3-ptbr",  # Modelo especializado em PT-BR
-                device="cuda" if use_cuda else "cpu",
+                device="cpu",
                 huggingface_token=huggingface_token
             )
             logger.info("✅ Whisper STT transcriber inicializado com sucesso")
@@ -103,7 +101,7 @@ class AudioProcessingPipeline:
             # Initialize WAV2VEC2 STT
             self.wav2vec2_stt = WAV2VEC2STTTranscriber(
                 wav2vec2_model_name="lgris/wav2vec2-large-xlsr-open-brazilian-portuguese-v2",  # Modelo especializado em PT-BR
-                device="cuda" if use_cuda else "cpu"
+                device="cpu"
             )
             logger.info("✅ WAV2VEC2 STT transcriber inicializado com sucesso")
             

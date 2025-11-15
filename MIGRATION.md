@@ -242,7 +242,13 @@ config = Config()  # Mesma interface, mas sem opcoes GPU
   - app.py movido para .backup/ (Flask nao usado)
   - Nenhum import quebrado encontrado (codigo ja correto)
   - Zero referencias a 'from src.' no codigo ativo
-- [ ] ETAPA 03: Remover GPU/CUDA
+- [X] ETAPA 03: Remover GPU/CUDA - CONCLUIDA
+  - Removido parametro use_cuda de pipeline.py e mos_filter.py
+  - Fixado torch.device('cpu') em diarizer.py e mos_filter.py
+  - Removido torch_dtype condicional de stt_whisper.py e stt_transcriber.py
+  - Simplificado denoiser.py para CPU-only
+  - Atualizadas docstrings removendo mencoes a GPU
+  - VERIFICADO: 0 referencias a CUDA/GPU no codigo
 - [ ] ETAPA 04: Remover emojis
 - [ ] ETAPA 05: Core modules
 - [ ] ETAPA 06: Utils

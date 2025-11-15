@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 class EnhancedDiarizer:
     def __init__(self, huggingface_token: Optional[str] = None):
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cpu')
         self.huggingface_token = huggingface_token or Config.HUGGINGFACE_TOKEN
         self.sample_rate = Config.SAMPLE_RATE
         

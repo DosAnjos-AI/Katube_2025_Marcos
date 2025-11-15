@@ -24,10 +24,10 @@ class WAV2VEC2STTTranscriber:
                  device: str = "cpu"):
         """
         Initialize WAV2VEC2 STT transcriber.
-        
+
         Args:
             wav2vec2_model_name: HuggingFace WAV2VEC2 model name
-            device: Device to run WAV2VEC2 on ('cpu' or 'cuda')
+            device: Device to run WAV2VEC2 on (CPU only)
         """
         self.device = device
         self.wav2vec2_model_name = wav2vec2_model_name

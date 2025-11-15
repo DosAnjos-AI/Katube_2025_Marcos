@@ -18,22 +18,19 @@ class MOSQualityFilter:
     Filters out low-quality audio segments (MOS < 2.0).
     """
     
-    def __init__(self, 
+    def __init__(self,
                  mos_threshold: float = 2.5,
-                 sample_rate: int = 24000,
-                 use_cuda: bool = False):
+                 sample_rate: int = 24000):
         """
         Initialize MOS quality filter.
-        
+
         Args:
             mos_threshold: Minimum MOS score to accept (default: 2.0)
             sample_rate: Target sample rate for audio processing
-            use_cuda: Whether to use GPU acceleration
         """
         self.mos_threshold = mos_threshold
         self.sample_rate = sample_rate
-        self.use_cuda = use_cuda
-        self.device = torch.device('cuda' if use_cuda and torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cpu')
         
         # Load pre-trained MOS predictor from SHEET
         self.predictor = None
@@ -50,17 +47,13 @@ class MOSQualityFilter:
             
             # Load pre-trained model using torch.hub
             self.predictor = torch.hub.load(
-                "unilight/sheet:v0.1.0", 
-                "default", 
-                trust_repo=True, 
+                "unilight/sheet:v0.1.0",
+                "default",
+                trust_repo=True,
                 force_reload=False
             )
-            
-            if self.use_cuda and torch.cuda.is_available():
-                self.predictor.model.cuda()
-                logger.info("✅ MOS predictor loaded on GPU")
-            else:
-                logger.info("✅ MOS predictor loaded on CPU")
+
+            logger.info("✅ MOS predictor loaded on CPU")
                 
         except Exception as e:
             logger.error(f"❌ ERRO CRÍTICO: Não foi possível carregar o filtro MOS: {e}")

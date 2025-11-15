@@ -25,10 +25,10 @@ class WhisperSTTTranscriber:
                  huggingface_token: Optional[str] = None):
         """
         Initialize Whisper STT transcriber.
-        
+
         Args:
             whisper_model_name: HuggingFace Whisper model name
-            device: Device to run Whisper on ('cpu' or 'cuda')
+            device: Device to run Whisper on (CPU only)
             huggingface_token: HuggingFace token for authentication
         """
         self.device = device
@@ -53,7 +53,7 @@ class WhisperSTTTranscriber:
             )
             self.whisper_model = WhisperForConditionalGeneration.from_pretrained(
                 self.whisper_model_name,
-                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                torch_dtype=torch.float32,
                 token=self.huggingface_token
             )
             self.whisper_model.to(self.device)

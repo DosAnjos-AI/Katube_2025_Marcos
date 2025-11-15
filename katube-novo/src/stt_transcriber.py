@@ -22,11 +22,12 @@ class STTTranscriber:
                  huggingface_token: Optional[str] = None):
         """
         Initialize STT transcriber with Whisper and WAV2VEC2 models.
-        
+
+
         Args:
             whisper_model_name: HuggingFace model name for Whisper
             wav2vec2_model_name: HuggingFace model name for WAV2VEC2
-            device: Device to run models on ('cpu' or 'cuda')
+            device: Device to run models on (CPU only)
             huggingface_token: HuggingFace token for authentication
         """
         self.device = device
@@ -54,7 +55,7 @@ class STTTranscriber:
             )
             self.whisper_model = WhisperForConditionalGeneration.from_pretrained(
                 self.whisper_model_name,
-                torch_dtype=torch.float16 if self.device == "cuda" else torch.float32,
+                torch_dtype=torch.float32,
                 token=self.huggingface_token
             )
             self.whisper_model.to(self.device)
