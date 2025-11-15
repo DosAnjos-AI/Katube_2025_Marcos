@@ -44,7 +44,7 @@ class EnhancedDiarizer:
         except Exception as e:
             error_msg = f"Failed to load diarization pipeline: {e}"
             if "gated" in str(e).lower() or "unauthorized" in str(e).lower() or "401" in str(e):
-                error_msg += "\n\n🚨 SOLUTION: Visit these URLs and accept terms:\n"
+                error_msg += "\n\n[ERRO] SOLUTION: Visit these URLs and accept terms:\n"
                 error_msg += "   • https://hf.co/pyannote/speaker-diarization-3.1\n"
                 error_msg += "   • https://hf.co/pyannote/segmentation-3.0\n"
                 error_msg += "   • https://hf.co/pyannote/embedding\n"

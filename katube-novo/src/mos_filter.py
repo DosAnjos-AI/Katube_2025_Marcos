@@ -37,13 +37,13 @@ class MOSQualityFilter:
         self._load_mos_predictor()
         
     def _load_mos_predictor(self):
-        """Load pre-trained MOS predictor from SHEET - OBRIGATÓRIO."""
+        """Load pre-trained MOS predictor from SHEET - OBRIGATORIO."""
         try:
-            logger.info("🔄 Loading MOS predictor from SHEET (OBRIGATÓRIO)...")
+            logger.info("[INFO] Loading MOS predictor from SHEET (OBRIGATORIO)...")
             
             # PyTorch é obrigatório para o filtro MOS
             if not self._check_torch_availability():
-                raise RuntimeError("❌ PyTorch é OBRIGATÓRIO para o filtro MOS. Instale: pip install torch torchaudio")
+                raise RuntimeError("[ERRO] PyTorch é OBRIGATORIO para o filtro MOS. Instale: pip install torch torchaudio")
             
             # Load pre-trained model using torch.hub
             self.predictor = torch.hub.load(
@@ -53,12 +53,12 @@ class MOSQualityFilter:
                 force_reload=False
             )
 
-            logger.info("✅ MOS predictor loaded on CPU")
+            logger.info("[OK] MOS predictor loaded on CPU")
                 
         except Exception as e:
-            logger.error(f"❌ ERRO CRÍTICO: Não foi possível carregar o filtro MOS: {e}")
-            logger.error("🔧 Solução: pip install torch torchaudio")
-            raise RuntimeError(f"Filtro MOS é OBRIGATÓRIO e falhou ao carregar: {e}")
+            logger.error(f"[ERRO] ERRO CRITICO: Não foi possível carregar o filtro MOS: {e}")
+            logger.error("[CONFIG] Solução: pip install torch torchaudio")
+            raise RuntimeError(f"Filtro MOS é OBRIGATORIO e falhou ao carregar: {e}")
     
     def _check_torch_availability(self) -> bool:
         """Check if PyTorch is available and working."""
@@ -69,15 +69,15 @@ class MOSQualityFilter:
             test_tensor = torch.randn(1000)
             return True
         except ImportError:
-            logger.warning("⚠️ PyTorch/torchaudio not installed")
+            logger.warning("[AVISO] PyTorch/torchaudio not installed")
             return False
         except Exception as e:
-            logger.warning(f"⚠️ PyTorch error: {e}")
+            logger.warning(f"[AVISO] PyTorch error: {e}")
             return False
     
     def predict_mos_score(self, audio_path: Path) -> float:
         """
-        Predict MOS score for audio file using SHEET predictor (OBRIGATÓRIO).
+        Predict MOS score for audio file using SHEET predictor (OBRIGATORIO).
         
         Args:
             audio_path: Path to audio file
@@ -87,19 +87,19 @@ class MOSQualityFilter:
         """
         try:
             if self.predictor is None:
-                raise RuntimeError("❌ Filtro MOS não foi inicializado corretamente")
+                raise RuntimeError("[ERRO] Filtro MOS não foi inicializado corretamente")
             
             # Check if file exists first
             if not audio_path.exists():
-                logger.error(f"❌ Arquivo não encontrado: {audio_path}")
+                logger.error(f"[ERRO] Arquivo não encontrado: {audio_path}")
                 return 1.0  # Return low score for missing files
             
             # SEMPRE usar SHEET predictor (obrigatório)
             return self.predictor.predict(wav_path=str(audio_path))
                 
         except Exception as e:
-            logger.error(f"❌ ERRO ao predizer MOS para {audio_path.name}: {e}")
-            logger.error("🔧 Verifique se PyTorch está instalado: pip install torch torchaudio")
+            logger.error(f"[ERRO] ERRO ao predizer MOS para {audio_path.name}: {e}")
+            logger.error("[CONFIG] Verifique se PyTorch está instalado: pip install torch torchaudio")
             # Return low score instead of raising exception to continue pipeline
             return 1.0
     
@@ -119,7 +119,7 @@ class MOSQualityFilter:
             audio, sr = self._load_audio_flexible(audio_path)
             
             if audio is None:
-                logger.warning(f"⚠️ Could not load audio: {audio_path.name}")
+                logger.warning(f"[AVISO] Could not load audio: {audio_path.name}")
                 return 1.0
             
             # Resample if needed
@@ -170,24 +170,24 @@ class MOSQualityFilter:
             return max(min(score, 5.0), 1.0)  # Clamp between 1.0 and 5.0
             
         except Exception as e:
-            logger.warning(f"⚠️ Error in simple quality assessment: {e}")
+            logger.warning(f"[AVISO] Error in simple quality assessment: {e}")
             return 1.0
     
     def _load_audio_flexible(self, audio_path: Path) -> Tuple[Optional[np.ndarray], int]:
         """Load audio using multiple methods as fallback."""
         # Check if file exists first
         if not audio_path.exists():
-            logger.error(f"❌ Arquivo não encontrado: {audio_path}")
+            logger.error(f"[ERRO] Arquivo não encontrado: {audio_path}")
             return None, 0
         
         # Check if file is empty or too small
         try:
             file_size = audio_path.stat().st_size
             if file_size < 1024:  # Less than 1KB
-                logger.error(f"❌ Arquivo muito pequeno ou vazio: {audio_path} ({file_size} bytes)")
+                logger.error(f"[ERRO] Arquivo muito pequeno ou vazio: {audio_path} ({file_size} bytes)")
                 return None, 0
         except Exception as e:
-            logger.error(f"❌ Erro ao verificar tamanho do arquivo {audio_path}: {e}")
+            logger.error(f"[ERRO] Erro ao verificar tamanho do arquivo {audio_path}: {e}")
             return None, 0
             
         try:
@@ -230,7 +230,7 @@ class MOSQualityFilter:
                 import librosa
                 return librosa.resample(audio, orig_sr=orig_sr, target_sr=target_sr)
         except Exception as e:
-            logger.warning(f"⚠️ Resampling failed: {e}")
+            logger.warning(f"[AVISO] Resampling failed: {e}")
             return audio
     
     def _estimate_snr(self, audio: np.ndarray) -> float:
@@ -292,7 +292,7 @@ class MOSQualityFilter:
             return silent_frames / total_frames if total_frames > 0 else 0.0
             
         except Exception as e:
-            logger.warning(f"⚠️ Error calculating silence ratio: {e}")
+            logger.warning(f"[AVISO] Error calculating silence ratio: {e}")
             return 0.0
     
     def _calculate_spectral_centroid(self, audio: np.ndarray) -> float:
@@ -337,14 +337,14 @@ class MOSQualityFilter:
             intermediate_dir.mkdir(parents=True, exist_ok=True)
             rejected_dir.mkdir(parents=True, exist_ok=True)
         
-        logger.info(f"🔍 Filtering {len(segment_paths)} audio segments with 3-tier MOS classification")
+        logger.info(f"[DEBUG] Filtering {len(segment_paths)} audio segments with 3-tier MOS classification")
         
         for i, segment_path in enumerate(segment_paths):
             try:
                 # Predict MOS score
                 mos_score = self.predict_mos_score(segment_path)
                 
-                logger.info(f"📊 {segment_path.name}: MOS = {mos_score:.2f}")
+                logger.info(f"[INFO] {segment_path.name}: MOS = {mos_score:.2f}")
                 
                 # Import naming utilities
                 from .naming_utils import extract_base_name, generate_standard_name
@@ -355,7 +355,7 @@ class MOSQualityFilter:
                 if mos_score >= 3.0:
                     # Aprovados - acima de 3,0
                     approved_segments.append(segment_path)
-                    logger.info(f"✅ Approved: {segment_path.name} (MOS: {mos_score:.2f})")
+                    logger.info(f"[OK] Approved: {segment_path.name} (MOS: {mos_score:.2f})")
                     
                     if output_dir:
                         try:
@@ -368,14 +368,14 @@ class MOSQualityFilter:
                             # Copy the approved file
                             import shutil
                             shutil.copy2(segment_path, approved_path)
-                            logger.debug(f"📁 Saved approved segment: {approved_filename}")
+                            logger.debug(f"[INFO] Saved approved segment: {approved_filename}")
                         except Exception as e:
-                            logger.warning(f"⚠️ Could not save approved segment {segment_path.name}: {e}")
+                            logger.warning(f"[AVISO] Could not save approved segment {segment_path.name}: {e}")
                             
                 elif mos_score >= 2.5:
                     # Intermediários - de 2,5 até 3,0
                     intermediate_segments.append(segment_path)
-                    logger.info(f"🟡 Intermediate: {segment_path.name} (MOS: {mos_score:.2f})")
+                    logger.info(f"[AVISO] Intermediate: {segment_path.name} (MOS: {mos_score:.2f})")
                     
                     if output_dir:
                         try:
@@ -388,13 +388,13 @@ class MOSQualityFilter:
                             # Copy the intermediate file
                             import shutil
                             shutil.copy2(segment_path, intermediate_path)
-                            logger.debug(f"📁 Saved intermediate segment: {intermediate_filename}")
+                            logger.debug(f"[INFO] Saved intermediate segment: {intermediate_filename}")
                         except Exception as e:
-                            logger.warning(f"⚠️ Could not save intermediate segment {segment_path.name}: {e}")
+                            logger.warning(f"[AVISO] Could not save intermediate segment {segment_path.name}: {e}")
                 else:
                     # Ruins - abaixo de 2,5
                     rejected_segments.append(segment_path)
-                    logger.warning(f"❌ Rejected: {segment_path.name} (MOS: {mos_score:.2f} < 2.5)")
+                    logger.warning(f"[ERRO] Rejected: {segment_path.name} (MOS: {mos_score:.2f} < 2.5)")
                     
                     if output_dir:
                         try:
@@ -407,16 +407,16 @@ class MOSQualityFilter:
                             # Copy the rejected file
                             import shutil
                             shutil.copy2(segment_path, rejected_path)
-                            logger.debug(f"📁 Saved rejected segment: {rejected_filename}")
+                            logger.debug(f"[INFO] Saved rejected segment: {rejected_filename}")
                         except Exception as e:
-                            logger.warning(f"⚠️ Could not save rejected segment {segment_path.name}: {e}")
+                            logger.warning(f"[AVISO] Could not save rejected segment {segment_path.name}: {e}")
                 
                 # Progress logging
                 if (i + 1) % 10 == 0:
-                    logger.info(f"📈 Processed {i + 1}/{len(segment_paths)} segments...")
+                    logger.info(f"[INFO] Processed {i + 1}/{len(segment_paths)} segments...")
                     
             except Exception as e:
-                logger.error(f"❌ Error processing {segment_path.name}: {e}")
+                logger.error(f"[ERRO] Error processing {segment_path.name}: {e}")
                 rejected_segments.append(segment_path)
                 
                 # Save error segment to rejected directory
@@ -429,12 +429,12 @@ class MOSQualityFilter:
                         import shutil
                         shutil.copy2(segment_path, error_path)
                     except Exception as e:
-                        logger.warning(f"⚠️ Could not save MOS error segment {segment_path.name}: {e}")
+                        logger.warning(f"[AVISO] Could not save MOS error segment {segment_path.name}: {e}")
         
-        logger.info(f"🎯 3-tier filtering complete:")
-        logger.info(f"   ✅ Approved (≥3.0): {len(approved_segments)}")
-        logger.info(f"   🟡 Intermediate (2.5-3.0): {len(intermediate_segments)}")
-        logger.info(f"   ❌ Rejected (<2.5): {len(rejected_segments)}")
+        logger.info(f"[INFO] 3-tier filtering complete:")
+        logger.info(f"   [OK] Approved (≥3.0): {len(approved_segments)}")
+        logger.info(f"   [AVISO] Intermediate (2.5-3.0): {len(intermediate_segments)}")
+        logger.info(f"   [ERRO] Rejected (<2.5): {len(rejected_segments)}")
         
         return approved_segments, intermediate_segments, rejected_segments
     

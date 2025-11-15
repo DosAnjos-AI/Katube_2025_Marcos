@@ -66,13 +66,13 @@ class SoxNormalizer:
                 if result.returncode == 0:
                     sox_found = True
                     sox_executable = sox_path
-                    logger.info(f"✅ Sox found at: {sox_path}")
+                    logger.info(f"[OK] Sox found at: {sox_path}")
                     break
             except (FileNotFoundError, subprocess.TimeoutExpired, Exception):
                 continue
         
         if not sox_found:
-            raise RuntimeError("❌ Sox not found. Please install Sox: https://sox.sourceforge.net/")
+            raise RuntimeError("[ERRO] Sox not found. Please install Sox: https://sox.sourceforge.net/")
             
         self.sox_executable = sox_executable
     
@@ -95,7 +95,7 @@ class SoxNormalizer:
                 standard_name = generate_standard_name(base_name, "sox_normalized")
                 output_path = input_path.parent / f"{standard_name}.{self.target_format}"
             
-            logger.info(f"🔄 Normalizing audio with Sox: {input_path.name}")
+            logger.info(f"[INFO] Normalizing audio with Sox: {input_path.name}")
             logger.info(f"   Target: {self.target_format}, {self.target_sample_rate}Hz, {self.target_channels} channel(s)")
             
             # Build Sox command
@@ -124,7 +124,7 @@ class SoxNormalizer:
                 input_size = input_path.stat().st_size
                 output_size = output_path.stat().st_size
                 
-                logger.info(f"✅ Audio normalized successfully with Sox")
+                logger.info(f"[OK] Audio normalized successfully with Sox")
                 logger.info(f"   Input: {input_size / (1024*1024):.1f} MB")
                 logger.info(f"   Output: {output_size / (1024*1024):.1f} MB")
                 logger.info(f"   Saved to: {output_path}")
@@ -142,7 +142,7 @@ class SoxNormalizer:
                 }
             else:
                 error_msg = result.stderr.strip() if result.stderr else "Unknown error"
-                logger.error(f"❌ Sox normalization failed: {error_msg}")
+                logger.error(f"[ERRO] Sox normalization failed: {error_msg}")
                 return {
                     'success': False,
                     'error': error_msg,
@@ -151,7 +151,7 @@ class SoxNormalizer:
                 
         except subprocess.TimeoutExpired:
             error_msg = "Sox normalization timeout (5 minutes)"
-            logger.error(f"❌ {error_msg}")
+            logger.error(f"[ERRO] {error_msg}")
             return {
                 'success': False,
                 'error': error_msg,
@@ -159,7 +159,7 @@ class SoxNormalizer:
             }
         except Exception as e:
             error_msg = f"Sox normalization error: {str(e)}"
-            logger.error(f"❌ {error_msg}")
+            logger.error(f"[ERRO] {error_msg}")
             return {
                 'success': False,
                 'error': error_msg,
@@ -187,7 +187,7 @@ class SoxNormalizer:
             'failure_count': 0
         }
         
-        logger.info(f"🔄 Starting batch normalization with Sox: {len(input_paths)} files")
+        logger.info(f"[INFO] Starting batch normalization with Sox: {len(input_paths)} files")
         
         for i, input_path in enumerate(input_paths):
             try:
@@ -202,18 +202,18 @@ class SoxNormalizer:
                 if result['success']:
                     results['successful'].append(result)
                     results['success_count'] += 1
-                    logger.info(f"✅ {i+1}/{len(input_paths)}: {input_path.name} -> {output_path.name}")
+                    logger.info(f"[OK] {i+1}/{len(input_paths)}: {input_path.name} -> {output_path.name}")
                 else:
                     results['failed'].append({
                         'input_path': str(input_path),
                         'error': result['error']
                     })
                     results['failure_count'] += 1
-                    logger.error(f"❌ {i+1}/{len(input_paths)}: {input_path.name} - {result['error']}")
+                    logger.error(f"[ERRO] {i+1}/{len(input_paths)}: {input_path.name} - {result['error']}")
                 
                 # Progress logging
                 if (i + 1) % 10 == 0:
-                    logger.info(f"📈 Sox normalization progress: {i + 1}/{len(input_paths)} files")
+                    logger.info(f"[INFO] Sox normalization progress: {i + 1}/{len(input_paths)} files")
                     
             except Exception as e:
                 error_msg = f"Batch processing error: {str(e)}"
@@ -222,11 +222,11 @@ class SoxNormalizer:
                     'error': error_msg
                 })
                 results['failure_count'] += 1
-                logger.error(f"❌ {i+1}/{len(input_paths)}: {input_path.name} - {error_msg}")
+                logger.error(f"[ERRO] {i+1}/{len(input_paths)}: {input_path.name} - {error_msg}")
         
-        logger.info(f"🎯 Sox batch normalization complete:")
-        logger.info(f"   ✅ Successful: {results['success_count']}")
-        logger.info(f"   ❌ Failed: {results['failure_count']}")
-        logger.info(f"   📁 Output directory: {output_dir}")
+        logger.info(f"[INFO] Sox batch normalization complete:")
+        logger.info(f"   [OK] Successful: {results['success_count']}")
+        logger.info(f"   [ERRO] Failed: {results['failure_count']}")
+        logger.info(f"   [INFO] Output directory: {output_dir}")
         
         return results

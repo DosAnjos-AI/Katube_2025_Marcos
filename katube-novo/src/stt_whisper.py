@@ -39,7 +39,7 @@ class WhisperSTTTranscriber:
         self.whisper_processor = None
         self.whisper_model = None
         
-        logger.info("🔄 Initializing Whisper STT model...")
+        logger.info("[INFO] Initializing Whisper STT model...")
         self._load_models()
         
     def _load_models(self):
@@ -57,10 +57,10 @@ class WhisperSTTTranscriber:
                 token=self.huggingface_token
             )
             self.whisper_model.to(self.device)
-            logger.info("✅ Whisper model loaded successfully")
+            logger.info("[OK] Whisper model loaded successfully")
                 
         except Exception as e:
-            logger.error(f"❌ Error loading Whisper STT model: {e}")
+            logger.error(f"[ERRO] Error loading Whisper STT model: {e}")
             raise RuntimeError(f"Failed to load Whisper STT model: {e}")
     
     def _preprocess_audio(self, audio_path: Path, target_sr: int = 16000) -> np.ndarray:
@@ -140,7 +140,7 @@ class WhisperSTTTranscriber:
         Returns:
             Dictionary with transcription results
         """
-        logger.info(f"🎤 Starting Whisper STT transcription of {len(segment_paths)} segments...")
+        logger.info(f"[INFO] Starting Whisper STT transcription of {len(segment_paths)} segments...")
         
         # Create output directory
         stt_dir = output_dir / 'stt_results'
@@ -170,7 +170,7 @@ class WhisperSTTTranscriber:
                     "file": str(whisper_file)
                 })
                 
-                logger.info(f"✅ Transcribed {segment_path.name}")
+                logger.info(f"[OK] Transcribed {segment_path.name}")
                 
             except Exception as e:
                 logger.error(f"Error processing segment {segment_path.name}: {e}")

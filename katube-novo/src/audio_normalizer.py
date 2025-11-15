@@ -46,11 +46,11 @@ class AudioNormalizer:
                 timeout=10
             )
             if result.returncode == 0:
-                logger.info("✅ FFmpeg is available")
+                logger.info("[OK] FFmpeg is available")
             else:
                 raise RuntimeError("FFmpeg not working properly")
         except (subprocess.TimeoutExpired, FileNotFoundError, subprocess.SubprocessError) as e:
-            logger.error(f"❌ FFmpeg not found or not working: {e}")
+            logger.error(f"[ERRO] FFmpeg not found or not working: {e}")
             raise RuntimeError("FFmpeg is required for audio normalization. Please install FFmpeg.")
     
     def normalize_audio(self, 
@@ -74,7 +74,7 @@ class AudioNormalizer:
                 standard_name = generate_standard_name(base_name, "normalized")
                 output_path = input_path.parent / f"{standard_name}.{self.target_format}"
             
-            logger.info(f"🔄 Normalizing audio: {input_path.name}")
+            logger.info(f"[INFO] Normalizing audio: {input_path.name}")
             logger.info(f"   Target: {self.target_format}, {self.target_sample_rate}Hz, {self.target_channels} channel(s)")
             
             # FFmpeg command for normalization
@@ -102,7 +102,7 @@ class AudioNormalizer:
                 input_size = input_path.stat().st_size
                 output_size = output_path.stat().st_size
                 
-                logger.info(f"✅ Audio normalized successfully")
+                logger.info(f"[OK] Audio normalized successfully")
                 logger.info(f"   Input: {input_size / (1024*1024):.1f} MB")
                 logger.info(f"   Output: {output_size / (1024*1024):.1f} MB")
                 logger.info(f"   Saved to: {output_path}")
@@ -118,7 +118,7 @@ class AudioNormalizer:
                     'channels': self.target_channels
                 }
             else:
-                logger.error(f"❌ FFmpeg normalization failed")
+                logger.error(f"[ERRO] FFmpeg normalization failed")
                 logger.error(f"   Error: {result.stderr}")
                 return {
                     'success': False,
@@ -127,14 +127,14 @@ class AudioNormalizer:
                 }
                 
         except subprocess.TimeoutExpired:
-            logger.error(f"❌ FFmpeg normalization timeout")
+            logger.error(f"[ERRO] FFmpeg normalization timeout")
             return {
                 'success': False,
                 'error': "FFmpeg normalization timeout (5 minutes)",
                 'input_path': str(input_path)
             }
         except Exception as e:
-            logger.error(f"❌ Audio normalization error: {e}")
+            logger.error(f"[ERRO] Audio normalization error: {e}")
             return {
                 'success': False,
                 'error': str(e),
@@ -163,7 +163,7 @@ class AudioNormalizer:
                 audio_path.unlink()  # Delete original
                 temp_path.rename(audio_path)  # Rename temp to original
                 
-                logger.info(f"✅ Original file replaced with normalized version")
+                logger.info(f"[OK] Original file replaced with normalized version")
                 
                 return {
                     'success': True,
@@ -180,7 +180,7 @@ class AudioNormalizer:
                 return result
                 
         except Exception as e:
-            logger.error(f"❌ Error replacing normalized file: {e}")
+            logger.error(f"[ERRO] Error replacing normalized file: {e}")
             return {
                 'success': False,
                 'error': str(e),

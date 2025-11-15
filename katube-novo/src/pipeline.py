@@ -63,21 +63,21 @@ class AudioProcessingPipeline:
         # Completeness filter moved to separate file (src/audio_completeness_filter.py)
         self.enable_completeness_filter = False  # DISABLED - moved to separate file
         
-        logger.info("🔍 Filtros de áudio:")
+        logger.info("[DEBUG] Filtros de áudio:")
         logger.info("   - Filtro de completude: DESABILITADO (arquivo separado)")
         
-        # Initialize MOS quality filter (OBRIGATÓRIO)
+        # Initialize MOS quality filter (OBRIGATORIO)
         self.enable_mos_filter = True  # Sempre habilitado
-        logger.info("🔍 Inicializando filtro MOS (OBRIGATÓRIO)...")
+        logger.info("[DEBUG] Inicializando filtro MOS (OBRIGATORIO)...")
         
         try:
             self.mos_filter = MOSQualityFilter(
                 mos_threshold=mos_threshold
             )
-            logger.info("✅ Filtro MOS inicializado com sucesso")
+            logger.info("[OK] Filtro MOS inicializado com sucesso")
         except Exception as e:
-            logger.error(f"❌ ERRO CRÍTICO: Falha ao inicializar filtro MOS: {e}")
-            raise RuntimeError(f"Filtro MOS é OBRIGATÓRIO e falhou: {e}")
+            logger.error(f"[ERRO] ERRO CRITICO: Falha ao inicializar filtro MOS: {e}")
+            raise RuntimeError(f"Filtro MOS é OBRIGATORIO e falhou: {e}")
         
         # Initialize YouTube scanner
         self.youtube_scanner = YouTubeChannelScanner(
@@ -87,7 +87,7 @@ class AudioProcessingPipeline:
         
         # Initialize STT transcribers (separated models)
         self.enable_stt = True  # Sempre habilitado
-        logger.info("🔍 Inicializando STT transcribers separados...")
+        logger.info("[DEBUG] Inicializando STT transcribers separados...")
         
         try:
             # Initialize Whisper STT
@@ -96,18 +96,18 @@ class AudioProcessingPipeline:
                 device="cpu",
                 huggingface_token=huggingface_token
             )
-            logger.info("✅ Whisper STT transcriber inicializado com sucesso")
+            logger.info("[OK] Whisper STT transcriber inicializado com sucesso")
             
             # Initialize WAV2VEC2 STT
             self.wav2vec2_stt = WAV2VEC2STTTranscriber(
                 wav2vec2_model_name="lgris/wav2vec2-large-xlsr-open-brazilian-portuguese-v2",  # Modelo especializado em PT-BR
                 device="cpu"
             )
-            logger.info("✅ WAV2VEC2 STT transcriber inicializado com sucesso")
+            logger.info("[OK] WAV2VEC2 STT transcriber inicializado com sucesso")
             
         except Exception as e:
-            logger.warning(f"⚠️ STT transcribers falharam: {e}")
-            logger.warning("⚠️ Continuando sem STT - pipeline funcionará normalmente")
+            logger.warning(f"[AVISO] STT transcribers falharam: {e}")
+            logger.warning("[AVISO] Continuando sem STT - pipeline funcionará normalmente")
             self.enable_stt = False
             self.whisper_stt = None
             self.wav2vec2_stt = None
@@ -121,7 +121,7 @@ class AudioProcessingPipeline:
         
         # Initialize denoiser
         self.denoiser = Denoiser(model_name="DeepFilterNet3")
-        logger.info("✅ Denoiser (DeepFilterNet3) inicializado com sucesso")
+        logger.info("[OK] Denoiser (DeepFilterNet3) inicializado com sucesso")
         
         # Initialize Sox normalizer for final processing
         self.sox_normalizer = SoxNormalizer(
@@ -130,7 +130,7 @@ class AudioProcessingPipeline:
             target_channels=1,
             normalize_gain=True
         )
-        logger.info("✅ Sox normalizer inicializado com sucesso")
+        logger.info("[OK] Sox normalizer inicializado com sucesso")
         
         # Pipeline state
         self.current_session = None
@@ -151,7 +151,7 @@ class AudioProcessingPipeline:
         for subdir in subdirs:
             (self.session_dir / subdir).mkdir(exist_ok=True)
         
-        logger.info(f"📁 Session local criada: {self.current_session}")
+        logger.info(f"[INFO] Session local criada: {self.current_session}")
         logger.info(f"Created session: {self.current_session}")
         return self.session_dir
 
@@ -164,9 +164,9 @@ class AudioProcessingPipeline:
                 try:                    
                     logger.info(f"\n\n[FINAL CLEAN-UP] Deletando a pasta: {diretories_to_delete}")
                     shutil.rmtree(diretories_to_delete)
-                    logger.info(f"✅ Sucesso: Diretório de downloads deletado: {diretories_to_delete}")
+                    logger.info(f"[OK] Sucesso: Diretório de downloads deletado: {diretories_to_delete}")
                 except Exception as e:
-                    logger.error(f"❌ Falha ao deletar o diretório de downloads: {e}")
+                    logger.error(f"[ERRO] Falha ao deletar o diretório de downloads: {e}")
     
     def download_youtube_audio(self, url: str, custom_filename: Optional[str] = None) -> Path:
         """
@@ -197,14 +197,14 @@ class AudioProcessingPipeline:
         normalization_result = self.audio_normalizer.normalize_and_replace(audio_path)
         
         if normalization_result['success']:
-            logger.info(f"✅ Audio normalized: {normalization_result['format']}, "
+            logger.info(f"[OK] Audio normalized: {normalization_result['format']}, "
                        f"{normalization_result['sample_rate']}Hz, "
                        f"{normalization_result['channels']} channel(s)")
             logger.info(f"   Size: {normalization_result['size'] / (1024*1024):.1f} MB")
         else:
-            logger.error(f"❌ Audio normalization failed: {normalization_result['error']}")
+            logger.error(f"[ERRO] Audio normalization failed: {normalization_result['error']}")
             # Continue with original audio if normalization fails
-            logger.warning("⚠️ Continuing with original audio format")
+            logger.warning("[AVISO] Continuing with original audio format")
         
         return audio_path
     
@@ -249,7 +249,7 @@ class AudioProcessingPipeline:
         logger.info("=== STEP 4: APPLYING MOS QUALITY FILTER ===")
         
         if not segment_paths:
-            logger.warning("⚠️ No segments to filter")
+            logger.warning("[AVISO] No segments to filter")
             return {
                 'filtered_segments': [],
                 'rejected_segments': [],
@@ -267,10 +267,10 @@ class AudioProcessingPipeline:
         
         # Generate quality report
         quality_report = self.mos_filter.get_quality_report(segment_paths)
-        logger.info(f"📊 MOS Quality Report: {quality_report}")
+        logger.info(f"[INFO] MOS Quality Report: {quality_report}")
         
         # Log detailed results
-        logger.info(f"🎯 MOS filtering results:")
+        logger.info(f"[INFO] MOS filtering results:")
         logger.info(f"   - Total segments analyzed: {len(segment_paths)}")
         logger.info(f"   - Accepted segments: {len(accepted_segments)}")
         logger.info(f"   - Rejected segments: {len(rejected_segments)}")
@@ -288,7 +288,7 @@ class AudioProcessingPipeline:
     
     def filter_segments_by_quality(self, segment_paths: List[Path]) -> Tuple[List[Path], List[Path]]:
         """
-        Filter audio segments based on MOS quality scores (OBRIGATÓRIO).
+        Filter audio segments based on MOS quality scores (OBRIGATORIO).
         
         Args:
             segment_paths: List of audio segment paths
@@ -297,9 +297,9 @@ class AudioProcessingPipeline:
             Tuple of (accepted_segments, rejected_segments)
         """
         if self.mos_filter is None:
-            raise RuntimeError("❌ Filtro MOS não foi inicializado (OBRIGATÓRIO)")
+            raise RuntimeError("[ERRO] Filtro MOS não foi inicializado (OBRIGATORIO)")
         
-        logger.info(f"🔍 Filtrando {len(segment_paths)} segmentos por qualidade MOS (OBRIGATÓRIO)...")
+        logger.info(f"[DEBUG] Filtrando {len(segment_paths)} segmentos por qualidade MOS (OBRIGATORIO)...")
         
         # Criar pastas específicas para áudios descartados
         rejected_completeness_dir = self.session_dir / 'audio_descartado_completude'
@@ -317,7 +317,7 @@ class AudioProcessingPipeline:
         
         # Generate quality report
         quality_report = self.mos_filter.get_quality_report(segment_paths)
-        logger.info(f"📊 Relatório de Qualidade MOS: {quality_report}")
+        logger.info(f"[INFO] Relatório de Qualidade MOS: {quality_report}")
         
         return accepted_segments, rejected_segments
     
@@ -331,19 +331,19 @@ class AudioProcessingPipeline:
         Returns:
             Dictionary with scan results
         """
-        logger.info(f"🔍 Scanning YouTube channel: {channel_url}")
+        logger.info(f"[DEBUG] Scanning YouTube channel: {channel_url}")
         
         result = self.youtube_scanner.scan_channel(channel_url)
         
         if result:
-            logger.info(f"✅ Channel scan complete: {result}")
+            logger.info(f"[OK] Channel scan complete: {result}")
             return {
                 'success': True,
                 'video_list_path': str(result),
                 'message': 'Channel scanned successfully'
             }
         else:
-            logger.error("❌ Channel scan failed")
+            logger.error("[ERRO] Channel scan failed")
             return {
                 'success': False,
                 'error': 'Channel scan failed',
@@ -362,12 +362,12 @@ class AudioProcessingPipeline:
         Returns:
             Dictionary with processing results
         """
-        logger.info(f"🔄 Processing YouTube channel: {channel_url}")
+        logger.info(f"[INFO] Processing YouTube channel: {channel_url}")
         
         def process_video_callback(video_url: str, total_videos: int, current_index: int) -> bool:
             """Callback to process each video from the channel."""
             try:
-                logger.info(f"📹 Processing video {current_index}/{total_videos}: {video_url}")
+                logger.info(f"[INFO] Processing video {current_index}/{total_videos}: {video_url}")
                 
                 # Process single video through pipeline
                 result = self.process_single_video(video_url)
@@ -382,7 +382,7 @@ class AudioProcessingPipeline:
                 return result.get('success', False)
                 
             except Exception as e:
-                logger.error(f"❌ Error processing video {video_url}: {e}")
+                logger.error(f"[ERRO] Error processing video {video_url}: {e}")
                 if progress_callback:
                     progress_callback(video_url, False, total_videos, current_index)
                 return False
@@ -406,7 +406,7 @@ class AudioProcessingPipeline:
             Dictionary with processing results
         """
         try:
-            logger.info(f"🎬 Processing single video: {video_url}")
+            logger.info(f"[INFO] Processing single video: {video_url}")
             
             # Create session for this video
             self.create_session()
@@ -414,7 +414,7 @@ class AudioProcessingPipeline:
             # Step 1: Download video
             try:
                 audio_path = self.download_youtube_audio(video_url)
-                logger.info(f"✅ Downloaded: {audio_path.name}")
+                logger.info(f"[OK] Downloaded: {audio_path.name}")
             except Exception as e:
                 return {
                     'success': False,
@@ -424,7 +424,7 @@ class AudioProcessingPipeline:
             # Step 2: Segment audio
             try:
                 segments = self.segment_audio(audio_path)
-                logger.info(f"✅ Segmented into {len(segments)} segments")
+                logger.info(f"[OK] Segmented into {len(segments)} segments")
             except Exception as e:
                 return {
                     'success': False,
@@ -437,7 +437,7 @@ class AudioProcessingPipeline:
             #     completeness_rejected_dir = self.session_dir / 'audio_descartado_completude'
             #     completeness_result = self.apply_completeness_filter(segments, rejected_dir=completeness_rejected_dir)
             #     segments = completeness_result['complete_segments']
-            #     logger.info(f"✅ Completeness filter: {len(segments)} segments passed (filtered {completeness_result['cut_count']} cut segments)")
+            #     logger.info(f"[OK] Completeness filter: {len(segments)} segments passed (filtered {completeness_result['cut_count']} cut segments)")
             
             # Step 4: Apply MOS filter
             if self.enable_mos_filter:
@@ -445,7 +445,7 @@ class AudioProcessingPipeline:
                     mos_rejected_dir = self.session_dir / 'audio_descartado_mos'
                     mos_result = self.apply_mos_filter(segments, rejected_dir=mos_rejected_dir)
                     segments = mos_result['filtered_segments']
-                    logger.info(f"✅ MOS filter: {len(segments)} segments passed")
+                    logger.info(f"[OK] MOS filter: {len(segments)} segments passed")
                 except Exception as e:
                     return {
                         'success': False,
@@ -465,14 +465,14 @@ class AudioProcessingPipeline:
                     final_segments.append(final_path)
                 
                 segments = final_segments
-                logger.info(f"✅ {len(segments)} segments moved to final approved directory")
+                logger.info(f"[OK] {len(segments)} segments moved to final approved directory")
             except Exception as e:
-                logger.warning(f"⚠️ Could not move segments to final directory: {e}")
+                logger.warning(f"[AVISO] Could not move segments to final directory: {e}")
             
             # Step 5: Perform diarization
             try:
                 diarization_result = self.perform_diarization(segments)
-                logger.info(f"✅ Diarization completed")
+                logger.info(f"[OK] Diarization completed")
             except Exception as e:
                 return {
                     'success': False,
@@ -482,7 +482,7 @@ class AudioProcessingPipeline:
             # Step 6: Detect overlaps
             try:
                 overlap_result = self.detect_overlaps(segments)
-                logger.info(f"✅ Overlap detection completed")
+                logger.info(f"[OK] Overlap detection completed")
             except Exception as e:
                 return {
                     'success': False,
@@ -492,7 +492,7 @@ class AudioProcessingPipeline:
             # Step 7: Separate by speaker
             try:
                 separation_result = self.separate_by_speaker(segments, diarization_result['rttm_path'])
-                logger.info(f"✅ Speaker separation completed")
+                logger.info(f"[OK] Speaker separation completed")
             except Exception as e:
                 return {
                     'success': False,
@@ -500,7 +500,7 @@ class AudioProcessingPipeline:
                 }
             
             # Files are kept locally for processing
-            logger.info(f"📁 Files saved locally in: {self.session_dir}")
+            logger.info(f"[INFO] Files saved locally in: {self.session_dir}")
             
             # Determine success based on whether we have processable content
             success = len(segments) > 0 or len(separation_result.get('stt_files', [])) > 0
@@ -518,7 +518,7 @@ class AudioProcessingPipeline:
             }
             
         except Exception as e:
-            logger.error(f"❌ Error processing video {video_url}: {e}")
+            logger.error(f"[ERRO] Error processing video {video_url}: {e}")
             return {
                 'success': False,
                 'error': str(e)
@@ -725,22 +725,22 @@ class AudioProcessingPipeline:
             # Transcribe with Whisper
             whisper_results = {}
             if self.whisper_stt:
-                logger.info("🎤 Transcribing with Whisper...")
+                logger.info("[INFO] Transcribing with Whisper...")
                 whisper_results = self.whisper_stt.transcribe_segments(
                     segment_paths=segment_paths,
                     output_dir=stt_output_dir
                 )
-                logger.info(f"✅ Whisper transcription completed: {whisper_results['whisper_count']} segments")
+                logger.info(f"[OK] Whisper transcription completed: {whisper_results['whisper_count']} segments")
             
             # Transcribe with WAV2VEC2
             wav2vec2_results = {}
             if self.wav2vec2_stt:
-                logger.info("🎤 Transcribing with WAV2VEC2...")
+                logger.info("[INFO] Transcribing with WAV2VEC2...")
                 wav2vec2_results = self.wav2vec2_stt.transcribe_segments(
                     segment_paths=segment_paths,
                     output_dir=stt_output_dir
                 )
-                logger.info(f"✅ WAV2VEC2 transcription completed: {wav2vec2_results['wav2vec2_count']} segments")
+                logger.info(f"[OK] WAV2VEC2 transcription completed: {wav2vec2_results['wav2vec2_count']} segments")
             
             # Combine results
             combined_results = {
@@ -763,7 +763,7 @@ class AudioProcessingPipeline:
                     output_dir=stt_output_dir
                 )
                 combined_results['validation'] = validation_result
-                logger.info(f"✅ STT validation completed: {validation_result.get('average_similarity', 0):.3f} avg similarity")
+                logger.info(f"[OK] STT validation completed: {validation_result.get('average_similarity', 0):.3f} avg similarity")
                 
                 # Step 9: Filter by similarity threshold and apply denoising
                 if validation_result.get('success') and validation_result.get('validation_results'):
@@ -773,7 +773,7 @@ class AudioProcessingPipeline:
                         similarity_threshold=0.80
                     )
                     combined_results['filter_and_denoise'] = filter_result
-                    logger.info(f"✅ Filtering and denoising completed: {filter_result.get('validated_count', 0)} validated, {filter_result.get('denoised_count', 0)} denoised")
+                    logger.info(f"[OK] Filtering and denoising completed: {filter_result.get('validated_count', 0)} validated, {filter_result.get('denoised_count', 0)} denoised")
             
             return combined_results
             
@@ -824,7 +824,7 @@ class AudioProcessingPipeline:
             #     completeness_rejected_dir = session_dir / 'audio_descartado_completude'
             #     completeness_result = self.apply_completeness_filter(segments, rejected_dir=completeness_rejected_dir)
             #     segments = completeness_result['complete_segments']
-            #     logger.info(f"✅ Completeness filter: {len(segments)} segments passed (filtered {completeness_result['cut_count']} cut segments)")
+            #     logger.info(f"[OK] Completeness filter: {len(segments)} segments passed (filtered {completeness_result['cut_count']} cut segments)")
             
             # Step 4: Apply MOS filter
             if self.enable_mos_filter:
@@ -832,9 +832,9 @@ class AudioProcessingPipeline:
                     mos_rejected_dir = session_dir / 'audio_descartado_mos'
                     mos_result = self.apply_mos_filter(segments, rejected_dir=mos_rejected_dir)
                     segments = mos_result['filtered_segments']
-                    logger.info(f"✅ MOS filter: {len(segments)} segments passed")
+                    logger.info(f"[OK] MOS filter: {len(segments)} segments passed")
                 except Exception as e:
-                    logger.error(f"❌ MOS filter failed: {e}")
+                    logger.error(f"[ERRO] MOS filter failed: {e}")
                     return {'success': False, 'error': f"MOS filter failed: {str(e)}"}
             
             # Step 5: Diarization (ANTES do STT)
@@ -854,17 +854,17 @@ class AudioProcessingPipeline:
             if self.enable_stt:
                 try:
                     stt_result = self.transcribe_audio_segments(stt_files if stt_files else segments)
-                    logger.info(f"✅ STT transcription completed: {stt_result.get('whisper_count', 0)} Whisper, {stt_result.get('wav2vec2_count', 0)} WAV2VEC2")
+                    logger.info(f"[OK] STT transcription completed: {stt_result.get('whisper_count', 0)} Whisper, {stt_result.get('wav2vec2_count', 0)} WAV2VEC2")
                     
                     # Check if validation and filtering were applied
                     if 'validation' in stt_result and 'filter_and_denoise' in stt_result:
                         validation_info = stt_result['validation']
                         filter_info = stt_result['filter_and_denoise']
-                        logger.info(f"📊 STT Validation: {validation_info.get('average_similarity', 0):.3f} avg similarity")
-                        logger.info(f"📊 Filtro 80%: {filter_info.get('validated_count', 0)} validados, {filter_info.get('denoised_count', 0)} denoised")
+                        logger.info(f"[INFO] STT Validation: {validation_info.get('average_similarity', 0):.3f} avg similarity")
+                        logger.info(f"[INFO] Filtro 80%: {filter_info.get('validated_count', 0)} validados, {filter_info.get('denoised_count', 0)} denoised")
                     
                 except Exception as e:
-                    logger.error(f"❌ STT transcription failed: {e}")
+                    logger.error(f"[ERRO] STT transcription failed: {e}")
                     # Continue without STT if it fails
                     logger.warning("Continuing pipeline without STT transcription")
             
@@ -882,9 +882,9 @@ class AudioProcessingPipeline:
                     final_segments.append(final_path)
                 
                 segments = final_segments
-                logger.info(f"✅ {len(segments)} segments moved to final approved directory")
+                logger.info(f"[OK] {len(segments)} segments moved to final approved directory")
             except Exception as e:
-                logger.warning(f"⚠️ Could not move segments to final directory: {e}")
+                logger.warning(f"[AVISO] Could not move segments to final directory: {e}")
             
             # Final results
             processing_time = time.time() - start_time
@@ -998,7 +998,7 @@ class AudioProcessingPipeline:
         logger.info("=== STEP 8: VALIDATING STT TRANSCRIPTIONS ===")
         
         if not whisper_results or not wav2vec2_results:
-            logger.warning("⚠️ No STT results to validate")
+            logger.warning("[AVISO] No STT results to validate")
             return {"error": "No STT results to validate"}
         
         try:
@@ -1013,8 +1013,8 @@ class AudioProcessingPipeline:
             
             # Validate that both STT models processed the same segments
             if len(whisper_results) != len(wav2vec2_results):
-                logger.warning(f"⚠️ Different number of segments: Whisper={len(whisper_results)}, WAV2VEC2={len(wav2vec2_results)}")
-                logger.warning("⚠️ Skipping validation - both models must process same segments")
+                logger.warning(f"[AVISO] Different number of segments: Whisper={len(whisper_results)}, WAV2VEC2={len(wav2vec2_results)}")
+                logger.warning("[AVISO] Skipping validation - both models must process same segments")
                 return {"error": "Different number of segments processed by STT models"}
             
             # Write Whisper metadata (format: filename | text - exactly as validation.py expects)
@@ -1033,12 +1033,12 @@ class AudioProcessingPipeline:
                     logger.debug(f"WAV2VEC2 metadata: '{filename}' | '{text[:50]}...'")
                     f.write(f"{filename}|{text}\n")
                     
-            logger.info(f"📝 Created metadata files:")
+            logger.info(f"[LOG] Created metadata files:")
             logger.info(f"   - Whisper: {len(whisper_results)} entries")
             logger.info(f"   - WAV2VEC2: {len(wav2vec2_results)} entries")
             
             # Run validation using the professor's validator (exactly as validation.py expects)
-            logger.info("🔍 Running STT validation with Levenshtein distance...")
+            logger.info("[DEBUG] Running STT validation with Levenshtein distance...")
             logger.info(f"   - Input file 1: {whisper_metadata_file}")
             logger.info(f"   - Input file 2: {wav2vec2_metadata_file}")
             logger.info(f"   - Output file: {validation_output_file}")
@@ -1058,16 +1058,16 @@ class AudioProcessingPipeline:
             max_similarity = 0
             
             if validation_success:
-                logger.info(f"✅ STT validation completed: {validation_output_file}")
+                logger.info(f"[OK] STT validation completed: {validation_output_file}")
                 
                 # Read validation results (exactly as validation.py produces)
                 validation_results = []
                 with open(validation_output_file, 'r', encoding='utf-8') as f:
                     lines = f.readlines()
-                    logger.info(f"📄 Validation file has {len(lines)} lines")
+                    logger.info(f"[INFO] Validation file has {len(lines)} lines")
                     
                     if len(lines) > 0:
-                        logger.info(f"📄 Header line: '{lines[0].strip()}'")
+                        logger.info(f"[INFO] Header line: '{lines[0].strip()}'")
                         
                     # Skip header if present: filename|subtitle|transcript|similarity
                     data_lines = lines[1:] if len(lines) > 1 else lines
@@ -1089,11 +1089,11 @@ class AudioProcessingPipeline:
                                     'wav2vec2_text': parts[2].strip(),
                                     'similarity': similarity
                                 })
-                                logger.debug(f"✅ Added validation result: {parts[0].strip()} -> {similarity}")
+                                logger.debug(f"[OK] Added validation result: {parts[0].strip()} -> {similarity}")
                             except ValueError as e:
-                                logger.warning(f"⚠️ Could not parse similarity '{parts[3]}': {e}")
+                                logger.warning(f"[AVISO] Could not parse similarity '{parts[3]}': {e}")
                         else:
-                            logger.warning(f"⚠️ Invalid line format (expected 4 parts, got {len(parts)}): '{line}'")
+                            logger.warning(f"[AVISO] Invalid line format (expected 4 parts, got {len(parts)}): '{line}'")
                 
                 # Calculate statistics
                 similarities = [r['similarity'] for r in validation_results]
@@ -1101,7 +1101,7 @@ class AudioProcessingPipeline:
                 min_similarity = min(similarities) if similarities else 0
                 max_similarity = max(similarities) if similarities else 0
                 
-                logger.info(f"📊 Validation statistics:")
+                logger.info(f"[INFO] Validation statistics:")
                 logger.info(f"   - Total segments validated: {len(validation_results)}")
                 logger.info(f"   - Average similarity: {avg_similarity:.3f}")
                 logger.info(f"   - Min similarity: {min_similarity:.3f}")
@@ -1119,7 +1119,7 @@ class AudioProcessingPipeline:
             
             # If validation failed
             if not validation_success:
-                logger.error("❌ STT validation failed")
+                logger.error("[ERRO] STT validation failed")
                 return {"error": "STT validation failed"}
                 
         except Exception as e:
@@ -1149,7 +1149,7 @@ class AudioProcessingPipeline:
         logger.setLevel(logging.DEBUG)
         
         if not validation_results:
-            logger.warning("⚠️ No validation results to process")
+            logger.warning("[AVISO] No validation results to process")
             return {"error": "No validation results to process"}
         
         try:
@@ -1197,9 +1197,9 @@ class AudioProcessingPipeline:
                 # Search in each possible location
                 for location in possible_locations:
                     if location.exists():
-                        logger.info(f"🔍 Searching in: {location}")
+                        logger.info(f"[DEBUG] Searching in: {location}")
                         files_found = list(location.glob("*.flac"))
-                        logger.info(f"📁 Found {len(files_found)} FLAC files in {location}")
+                        logger.info(f"[INFO] Found {len(files_found)} FLAC files in {location}")
                         
                         # Log first few files for debugging
                         for i, audio_path in enumerate(files_found[:3]):
@@ -1211,15 +1211,15 @@ class AudioProcessingPipeline:
                             # Check if the base name matches
                             if base_name in audio_path.stem:
                                 audio_file = audio_path
-                                logger.info(f"✅ Found audio file: {audio_file} (base: {base_name})")
+                                logger.info(f"[OK] Found audio file: {audio_file} (base: {base_name})")
                                 break
                         if audio_file:
                             break
                     else:
-                        logger.debug(f"❌ Location does not exist: {location}")
+                        logger.debug(f"[ERRO] Location does not exist: {location}")
                 
                 if not audio_file:
-                    logger.warning(f"⚠️ Could not find audio file for: {filename}")
+                    logger.warning(f"[AVISO] Could not find audio file for: {filename}")
                     continue
                 
                 # Categorize based on similarity threshold
@@ -1231,7 +1231,7 @@ class AudioProcessingPipeline:
                         'validated_path': validated_dir / f"{filename}.flac",
                         'denoised_path': denoised_dir / f"{filename}_denoised.flac"
                     })
-                    logger.info(f"✅ Validated: {filename} (similarity: {similarity:.3f})")
+                    logger.info(f"[OK] Validated: {filename} (similarity: {similarity:.3f})")
                 else:
                     rejected_segments.append({
                         'filename': filename,
@@ -1239,16 +1239,16 @@ class AudioProcessingPipeline:
                         'original_path': audio_file,
                         'rejected_path': rejected_dir / f"{filename}.flac"
                     })
-                    logger.info(f"❌ Rejected: {filename} (similarity: {similarity:.3f})")
+                    logger.info(f"[ERRO] Rejected: {filename} (similarity: {similarity:.3f})")
             
-            logger.info(f"📊 Filtering results:")
+            logger.info(f"[INFO] Filtering results:")
             logger.info(f"   - Total segments: {len(validation_results)}")
             logger.info(f"   - Validated segments (≥{similarity_threshold}): {len(validated_segments)}")
             logger.info(f"   - Rejected segments (<{similarity_threshold}): {len(rejected_segments)}")
             
             # Log details of validated segments
             if validated_segments:
-                logger.info("📋 Validated segments details:")
+                logger.info("[INFO] Validated segments details:")
                 for seg in validated_segments[:5]:  # Show first 5
                     logger.info(f"   - {seg['filename']}: {seg['similarity']:.3f}")
                 if len(validated_segments) > 5:
@@ -1256,60 +1256,60 @@ class AudioProcessingPipeline:
             
             # Log details of rejected segments  
             if rejected_segments:
-                logger.info("📋 Rejected segments details:")
+                logger.info("[INFO] Rejected segments details:")
                 for seg in rejected_segments[:5]:  # Show first 5
                     logger.info(f"   - {seg['filename']}: {seg['similarity']:.3f}")
                 if len(rejected_segments) > 5:
                     logger.info(f"   ... and {len(rejected_segments) - 5} more")
             
             # Copy validated segments to audios_validados_tts directory
-            logger.info(f"📁 Copying {len(validated_segments)} validated segments to audios_validados_tts...")
+            logger.info(f"[INFO] Copying {len(validated_segments)} validated segments to audios_validados_tts...")
             for seg in validated_segments:
                 import shutil
                 shutil.copy2(seg['original_path'], seg['validated_path'])
-                logger.debug(f"✅ Copied to validated: {seg['filename']}")
+                logger.debug(f"[OK] Copied to validated: {seg['filename']}")
             
             # Copy rejected segments to audio_rejeitado_validacao directory
-            logger.info(f"📁 Copying {len(rejected_segments)} rejected segments to audio_rejeitado_validacao...")
+            logger.info(f"[INFO] Copying {len(rejected_segments)} rejected segments to audio_rejeitado_validacao...")
             for seg in rejected_segments:
                 import shutil
                 shutil.copy2(seg['original_path'], seg['rejected_path'])
-                logger.debug(f"❌ Copied to rejected: {seg['filename']}")
+                logger.debug(f"[ERRO] Copied to rejected: {seg['filename']}")
             
             # Apply denoising to validated segments and save to audios_denoiser
-            logger.info(f"🔊 Applying DeepFilterNet3 denoising to {len(validated_segments)} validated segments...")
+            logger.info(f"[INFO] Applying DeepFilterNet3 denoising to {len(validated_segments)} validated segments...")
             denoised_count = 0
             
             for seg in validated_segments:
                 try:
-                    logger.info(f"🎛️ Denoising: {seg['filename']} (similarity: {seg['similarity']:.3f})")
+                    logger.info(f"[INFO]️ Denoising: {seg['filename']} (similarity: {seg['similarity']:.3f})")
                     self.denoiser.process_file(
                         str(seg['validated_path']), 
                         str(seg['denoised_path'])
                     )
                     denoised_count += 1
-                    logger.info(f"✅ Denoised and saved to audios_denoiser: {seg['filename']}")
+                    logger.info(f"[OK] Denoised and saved to audios_denoiser: {seg['filename']}")
                 except Exception as e:
-                    logger.error(f"❌ Error denoising {seg['filename']}: {e}")
+                    logger.error(f"[ERRO] Error denoising {seg['filename']}: {e}")
             
-            logger.info(f"✅ Denoising completed: {denoised_count}/{len(validated_segments)} segments processed")
+            logger.info(f"[OK] Denoising completed: {denoised_count}/{len(validated_segments)} segments processed")
             
             # Restore original log level
             logger.setLevel(original_level)
             
             # Collect denoised audio paths for final dataset creation
             denoised_audio_paths = []
-            logger.info(f"🔍 Coletando caminhos de áudios denoised de {len(validated_segments)} segmentos validados...")
+            logger.info(f"[DEBUG] Coletando caminhos de áudios denoised de {len(validated_segments)} segmentos validados...")
             for seg in validated_segments:
                 denoised_path = seg['denoised_path']
                 logger.debug(f"   Verificando: {denoised_path}")
                 if denoised_path.exists():
                     denoised_audio_paths.append(denoised_path)
-                    logger.info(f"   ✅ Encontrado: {denoised_path.name}")
+                    logger.info(f"   [OK] Encontrado: {denoised_path.name}")
                 else:
-                    logger.warning(f"   ❌ Não encontrado: {denoised_path}")
+                    logger.warning(f"   [ERRO] Não encontrado: {denoised_path}")
             
-            logger.info(f"📊 Total de áudios denoised coletados: {len(denoised_audio_paths)}")
+            logger.info(f"[INFO] Total de áudios denoised coletados: {len(denoised_audio_paths)}")
 
             #logger.info("===\n\n\n LIMPEZA DE DIRETÓRIOS INTERMEDIÁRIOS ===")
             #self.cleanup(stages_to_clean=["downloads", "segments", "stt_ready", "audios_abaixo_2,5_MOS", "audios_acima_3,0_MOS", "audios_validados_tts", "audios_denoiser", "clean", "audios_entre_2,5_e_3,0_MOS", "diarization", "overlapping", "speakers"])
@@ -1350,7 +1350,7 @@ class AudioProcessingPipeline:
         # Remove _stt_XXX pattern from the end
         import re
         base_name = re.sub(r'_stt_\d+$', '', filename)
-        logger.debug(f"🔍 Extracted base name: '{filename}' -> '{base_name}'")
+        logger.debug(f"[DEBUG] Extracted base name: '{filename}' -> '{base_name}'")
         return base_name
     
     def _prepare_for_json(self, obj):
@@ -1376,7 +1376,7 @@ class AudioProcessingPipeline:
         Returns:
             Dicionário com resultados da criação do dataset
         """
-        logger.info("🎯 Criando dataset final com normalização Sox...")
+        logger.info("[INFO] Criando dataset final com normalização Sox...")
         
         # Criar diretórios para o dataset final
         final_audio_dir = output_dir / "audios_final"
@@ -1393,14 +1393,14 @@ class AudioProcessingPipeline:
             'failure_count': 0
         }
         
-        logger.info(f"📁 Diretórios criados:")
+        logger.info(f"[INFO] Diretórios criados:")
         logger.info(f"   - Áudios finais: {final_audio_dir}")
         logger.info(f"   - Transcrições finais: {final_transcriptions_dir}")
         
         # Processar cada áudio denoised
         for i, denoised_path in enumerate(denoised_audio_paths):
             try:
-                logger.info(f"🔄 Processando {i+1}/{len(denoised_audio_paths)}: {denoised_path.name}")
+                logger.info(f"[INFO] Processando {i+1}/{len(denoised_audio_paths)}: {denoised_path.name}")
                 
                 # Extrair nome base para nomenclatura final
                 from .naming_utils import extract_base_name, generate_standard_name
@@ -1414,8 +1414,8 @@ class AudioProcessingPipeline:
                 final_audio_name = generate_standard_name(base_name, "final", i+1)
                 final_audio_path = final_audio_dir / f"{final_audio_name}.flac"
                 
-                logger.info(f"🎵 EXECUTANDO SOX: {denoised_path.name} → {final_audio_path.name}")
-                print(f"🎵 SOX NORMALIZATION: {denoised_path} → {final_audio_path}")
+                logger.info(f"[INFO] EXECUTANDO SOX: {denoised_path.name} → {final_audio_path.name}")
+                print(f"[INFO] SOX NORMALIZATION: {denoised_path} → {final_audio_path}")
                 
                 normalization_result = self.sox_normalizer.normalize_audio(
                     input_path=denoised_path,
@@ -1425,11 +1425,11 @@ class AudioProcessingPipeline:
                 if normalization_result['success']:
                     results['successful_normalizations'].append(normalization_result)
                     results['success_count'] += 1
-                    logger.info(f"✅ SOX CONCLUÍDO: {final_audio_path.name}")
-                    print(f"✅ SOX SUCCESS: {final_audio_path}")
+                    logger.info(f"[OK] SOX CONCLUÍDO: {final_audio_path.name}")
+                    print(f"[OK] SOX SUCCESS: {final_audio_path}")
                     
                     # BUSCAR E COPIAR TRANSCRIÇÕES STT (Whisper + WAV2VEC2)
-                    logger.info(f"📝 Buscando transcrições STT para: {base_name}")
+                    logger.info(f"[LOG] Buscando transcrições STT para: {base_name}")
                     transcription_files = self._find_transcription_files(base_name, stt_results_dir)
                     
                     if transcription_files:
@@ -1446,11 +1446,11 @@ class AudioProcessingPipeline:
                             'base_name': base_name
                         })
                         
-                        logger.info(f"✅ {final_audio_path.name} + {len(final_transcriptions)} transcrições copiadas")
-                        print(f"📝 TRANSCRIPTIONS COPIED: {len(final_transcriptions)} files for {final_audio_path.name}")
+                        logger.info(f"[OK] {final_audio_path.name} + {len(final_transcriptions)} transcrições copiadas")
+                        print(f"[LOG] TRANSCRIPTIONS COPIED: {len(final_transcriptions)} files for {final_audio_path.name}")
                     else:
-                        logger.warning(f"⚠️ Nenhuma transcrição encontrada para {base_name}")
-                        print(f"⚠️ NO TRANSCRIPTIONS FOUND for {base_name}")
+                        logger.warning(f"[AVISO] Nenhuma transcrição encontrada para {base_name}")
+                        print(f"[AVISO] NO TRANSCRIPTIONS FOUND for {base_name}")
                         
                 else:
                     results['failed_normalizations'].append({
@@ -1458,8 +1458,8 @@ class AudioProcessingPipeline:
                         'error': normalization_result['error']
                     })
                     results['failure_count'] += 1
-                    logger.error(f"❌ SOX FALHOU: {normalization_result['error']}")
-                    print(f"❌ SOX FAILED: {normalization_result['error']}")
+                    logger.error(f"[ERRO] SOX FALHOU: {normalization_result['error']}")
+                    print(f"[ERRO] SOX FAILED: {normalization_result['error']}")
                     
             except Exception as e:
                 error_msg = f"Erro no processamento de {denoised_path.name}: {str(e)}"
@@ -1468,14 +1468,14 @@ class AudioProcessingPipeline:
                     'error': error_msg
                 })
                 results['failure_count'] += 1
-                logger.error(f"❌ {error_msg}")
+                logger.error(f"[ERRO] {error_msg}")
         
         # Estatísticas finais
-        logger.info(f"🎯 Dataset final criado:")
-        logger.info(f"   ✅ Sucessos: {results['success_count']}")
-        logger.info(f"   ❌ Falhas: {results['failure_count']}")
-        logger.info(f"   📝 Pares áudio-transcrição: {len(results['transcription_pairs'])}")
-        logger.info(f"   📁 Localização: {output_dir}")
+        logger.info(f"[INFO] Dataset final criado:")
+        logger.info(f"   [OK] Sucessos: {results['success_count']}")
+        logger.info(f"   [ERRO] Falhas: {results['failure_count']}")
+        logger.info(f"   [LOG] Pares áudio-transcrição: {len(results['transcription_pairs'])}")
+        logger.info(f"   [INFO] Localização: {output_dir}")
         
         return results
     
@@ -1498,10 +1498,10 @@ class AudioProcessingPipeline:
             stt_results_dir / "STT-wav2vec2"
         ]
         
-        logger.info(f"🔍 Buscando transcrições para base_name: {base_name}")
+        logger.info(f"[DEBUG] Buscando transcrições para base_name: {base_name}")
         
         for stt_dir in stt_directories:
-            logger.info(f"📁 Verificando diretório: {stt_dir}")
+            logger.info(f"[INFO] Verificando diretório: {stt_dir}")
             
             if stt_dir.exists():
                 # Listar todos os arquivos .txt no diretório
@@ -1514,13 +1514,13 @@ class AudioProcessingPipeline:
                     # Verificar se o nome base está no nome do arquivo
                     if base_name in txt_file.stem or txt_file.stem.startswith(base_name):
                         transcription_files.append(txt_file)
-                        logger.info(f"   ✅ MATCH: {txt_file.name}")
+                        logger.info(f"   [OK] MATCH: {txt_file.name}")
                     else:
-                        logger.debug(f"   ❌ No match: {txt_file.stem} != {base_name}")
+                        logger.debug(f"   [ERRO] No match: {txt_file.stem} != {base_name}")
             else:
-                logger.warning(f"   ❌ Diretório não existe: {stt_dir}")
+                logger.warning(f"   [ERRO] Diretório não existe: {stt_dir}")
         
-        logger.info(f"📝 Total de transcrições encontradas: {len(transcription_files)}")
+        logger.info(f"[LOG] Total de transcrições encontradas: {len(transcription_files)}")
         for tf in transcription_files:
             logger.info(f"   - {tf}")
         
@@ -1540,7 +1540,7 @@ class AudioProcessingPipeline:
         """
         final_transcriptions = []
         
-        logger.info(f"📄 Copiando {len(transcription_files)} transcrições para: {final_transcriptions_dir}")
+        logger.info(f"[INFO] Copiando {len(transcription_files)} transcrições para: {final_transcriptions_dir}")
         
         for i, transcription_file in enumerate(transcription_files):
             try:
@@ -1556,8 +1556,8 @@ class AudioProcessingPipeline:
                 final_transcription_name = f"{final_audio_name}_{stt_type}.txt"
                 final_transcription_path = final_transcriptions_dir / final_transcription_name
                 
-                logger.info(f"📄 Copiando {stt_type}: {transcription_file.name} → {final_transcription_name}")
-                print(f"📄 COPYING TRANSCRIPTION: {transcription_file} → {final_transcription_path}")
+                logger.info(f"[INFO] Copiando {stt_type}: {transcription_file.name} → {final_transcription_name}")
+                print(f"[INFO] COPYING TRANSCRIPTION: {transcription_file} → {final_transcription_path}")
                 
                 # Copiar arquivo
                 import shutil
@@ -1570,13 +1570,13 @@ class AudioProcessingPipeline:
                     'filename': final_transcription_name
                 })
                 
-                logger.info(f"✅ Transcrição {stt_type} copiada: {final_transcription_name}")
+                logger.info(f"[OK] Transcrição {stt_type} copiada: {final_transcription_name}")
                 
             except Exception as e:
-                logger.error(f"❌ Erro ao copiar transcrição {transcription_file}: {e}")
-                print(f"❌ TRANSCRIPTION COPY FAILED: {transcription_file} - {e}")
+                logger.error(f"[ERRO] Erro ao copiar transcrição {transcription_file}: {e}")
+                print(f"[ERRO] TRANSCRIPTION COPY FAILED: {transcription_file} - {e}")
         
-        logger.info(f"📄 Total de transcrições copiadas: {len(final_transcriptions)}")
+        logger.info(f"[INFO] Total de transcrições copiadas: {len(final_transcriptions)}")
         
         return final_transcriptions
 

@@ -413,10 +413,10 @@ def main():
     stats = validador.validar_todos_jsons()
     
     if stats['total_aprovados'] > 0:
-        print(f"\n✅ Validação concluída com sucesso!")
+        print(f"\n[OK] Validação concluída com sucesso!")
         print(f"Verifique o arquivo: {validador.csv_saida}")
     else:
-        print(f"\n⚠️  Nenhum segmento aprovado com threshold {threshold}")
+        print(f"\n[AVISO]  Nenhum segmento aprovado com threshold {threshold}")
 
 
 if __name__ == "__main__":

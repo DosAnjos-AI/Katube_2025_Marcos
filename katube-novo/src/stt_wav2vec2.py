@@ -36,7 +36,7 @@ class WAV2VEC2STTTranscriber:
         self.wav2vec2_processor = None
         self.wav2vec2_model = None
         
-        logger.info("🔄 Initializing WAV2VEC2 STT model...")
+        logger.info("[INFO] Initializing WAV2VEC2 STT model...")
         self._load_models()
         
     def _load_models(self):
@@ -54,10 +54,10 @@ class WAV2VEC2STTTranscriber:
                 self.wav2vec2_model_name
             )
             self.wav2vec2_model.to(self.device)
-            logger.info("✅ WAV2VEC2 model loaded successfully")
+            logger.info("[OK] WAV2VEC2 model loaded successfully")
                 
         except Exception as e:
-            logger.error(f"❌ Error loading WAV2VEC2 STT model: {e}")
+            logger.error(f"[ERRO] Error loading WAV2VEC2 STT model: {e}")
             raise RuntimeError(f"Failed to load WAV2VEC2 STT model: {e}")
     
     def _preprocess_audio(self, audio_path: Path, target_sr: int = 16000) -> np.ndarray:
@@ -135,7 +135,7 @@ class WAV2VEC2STTTranscriber:
         Returns:
             Dictionary with transcription results
         """
-        logger.info(f"🎤 Starting WAV2VEC2 STT transcription of {len(segment_paths)} segments...")
+        logger.info(f"[INFO] Starting WAV2VEC2 STT transcription of {len(segment_paths)} segments...")
         
         # Create output directory
         stt_dir = output_dir / 'stt_results'
@@ -165,7 +165,7 @@ class WAV2VEC2STTTranscriber:
                     "file": str(wav2vec2_file)
                 })
                 
-                logger.info(f"✅ Transcribed {segment_path.name}")
+                logger.info(f"[OK] Transcribed {segment_path.name}")
                 
             except Exception as e:
                 logger.error(f"Error processing segment {segment_path.name}: {e}")

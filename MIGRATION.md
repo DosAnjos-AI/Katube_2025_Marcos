@@ -249,7 +249,12 @@ config = Config()  # Mesma interface, mas sem opcoes GPU
   - Simplificado denoiser.py para CPU-only
   - Atualizadas docstrings removendo mencoes a GPU
   - VERIFICADO: 0 referencias a CUDA/GPU no codigo
-- [ ] ETAPA 04: Remover emojis
+- [X] ETAPA 04: Remover emojis - CONCLUIDA
+  - Substituidos 253 emojis por tags ASCII em 12 arquivos
+  - Mapeamento: emoji→[CONFIG], emoji→[OK], emoji→[ERRO], emoji→[AVISO], emoji→[INFO]
+  - Removidos acentos de palavras maiusculas (CRITICO, OBRIGATORIO)
+  - Arquivos processados: pipeline.py (127), mos_filter.py (36), e 10 outros
+  - VERIFICADO: 0 emojis no codigo Python
 - [ ] ETAPA 05: Core modules
 - [ ] ETAPA 06: Utils
 - [ ] ETAPA 07-11: Stages modularizadas

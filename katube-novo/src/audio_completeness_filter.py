@@ -199,7 +199,7 @@ class AudioCompletenessFilter:
         Returns:
             Dictionary with filtering results
         """
-        logger.info(f"🔍 Applying completeness filter to {len(segment_paths)} segments...")
+        logger.info(f"[DEBUG] Applying completeness filter to {len(segment_paths)} segments...")
         
         if rejected_dir:
             rejected_dir.mkdir(parents=True, exist_ok=True)
@@ -216,7 +216,7 @@ class AudioCompletenessFilter:
                 
             if analysis['is_complete']:
                     complete_segments.append(segment_path)
-                logger.debug(f"✅ Complete: {segment_path.name} (score: {analysis['completeness_score']:.2f})")
+                logger.debug(f"[OK] Complete: {segment_path.name} (score: {analysis['completeness_score']:.2f})")
                 else:
                 cut_segments.append(segment_path)
                 filter_reasons[str(segment_path)] = analysis['filter_reasons']
@@ -225,9 +225,9 @@ class AudioCompletenessFilter:
                 if rejected_dir:
                     rejected_path = rejected_dir / segment_path.name
                     segment_path.rename(rejected_path)
-                    logger.debug(f"❌ Moved to rejected: {segment_path.name}")
+                    logger.debug(f"[ERRO] Moved to rejected: {segment_path.name}")
                 
-                logger.debug(f"❌ Cut: {segment_path.name} (score: {analysis['completeness_score']:.2f}) - {', '.join(analysis['filter_reasons'])}")
+                logger.debug(f"[ERRO] Cut: {segment_path.name} (score: {analysis['completeness_score']:.2f}) - {', '.join(analysis['filter_reasons'])}")
         
         # Calculate statistics
         total_segments = len(segment_paths)

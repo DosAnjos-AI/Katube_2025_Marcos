@@ -41,7 +41,7 @@ class STTTranscriber:
         self.wav2vec2_processor = None
         self.wav2vec2_model = None
         
-        logger.info("🔄 Initializing STT models...")
+        logger.info("[INFO] Initializing STT models...")
         self._load_models()
         
     def _load_models(self):
@@ -59,7 +59,7 @@ class STTTranscriber:
                 token=self.huggingface_token
             )
             self.whisper_model.to(self.device)
-            logger.info("✅ Whisper model loaded successfully")
+            logger.info("[OK] Whisper model loaded successfully")
             
             # Load WAV2VEC2 model (público - sem token necessário)
             logger.info(f"Loading WAV2VEC2 model: {self.wav2vec2_model_name}")
@@ -70,10 +70,10 @@ class STTTranscriber:
                 self.wav2vec2_model_name
             )
             self.wav2vec2_model.to(self.device)
-            logger.info("✅ WAV2VEC2 model loaded successfully")
+            logger.info("[OK] WAV2VEC2 model loaded successfully")
             
         except Exception as e:
-            logger.error(f"❌ Error loading STT models: {e}")
+            logger.error(f"[ERRO] Error loading STT models: {e}")
             raise RuntimeError(f"Failed to load STT models: {e}")
     
     def _preprocess_audio(self, audio_path: Path, target_sr: int = 16000) -> np.ndarray:
@@ -248,7 +248,7 @@ class STTTranscriber:
                     "file": str(wav2vec2_file)
                 })
                 
-                logger.info(f"✅ Transcribed {segment_path.name}")
+                logger.info(f"[OK] Transcribed {segment_path.name}")
                 
             except Exception as e:
                 logger.error(f"Error processing segment {segment_path.name}: {e}")

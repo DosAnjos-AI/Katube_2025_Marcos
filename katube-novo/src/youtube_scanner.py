@@ -46,7 +46,7 @@ class YouTubeChannelScanner:
         self.base_dir.mkdir(parents=True, exist_ok=True)
         
         if not api_key:
-            logger.warning("⚠️ No YouTube API key provided. Channel scanning will not work.")
+            logger.warning("[AVISO] No YouTube API key provided. Channel scanning will not work.")
     
     def extract_channel_id(self, url: str) -> Optional[str]:
         """
@@ -80,11 +80,11 @@ class YouTubeChannelScanner:
                     # Otherwise, resolve to channel ID
                     return self._resolve_channel_id(channel_identifier)
             
-            logger.warning(f"⚠️ Could not extract channel ID from URL: {url}")
+            logger.warning(f"[AVISO] Could not extract channel ID from URL: {url}")
             return None
             
         except Exception as e:
-            logger.error(f"❌ Error extracting channel ID: {e}")
+            logger.error(f"[ERRO] Error extracting channel ID: {e}")
             return None
     
     def _resolve_channel_id(self, identifier: str) -> Optional[str]:
@@ -99,7 +99,7 @@ class YouTubeChannelScanner:
         """
         try:
             if not self.api_key or not build:
-                logger.warning("⚠️ YouTube API not available for channel resolution")
+                logger.warning("[AVISO] YouTube API not available for channel resolution")
                 return None
             
             youtube = build('youtube', 'v3', developerKey=self.api_key)
@@ -122,11 +122,11 @@ class YouTubeChannelScanner:
                 except:
                     continue
             
-            logger.warning(f"⚠️ Could not resolve channel ID for: {identifier}")
+            logger.warning(f"[AVISO] Could not resolve channel ID for: {identifier}")
             return None
             
         except Exception as e:
-            logger.error(f"❌ Error resolving channel ID: {e}")
+            logger.error(f"[ERRO] Error resolving channel ID: {e}")
             return None
     
     def scan_channel(self, channel_url: str, output_filename: str = "youtube_videos.txt") -> Optional[Path]:
@@ -142,16 +142,16 @@ class YouTubeChannelScanner:
         """
         try:
             if not self.api_key or not search_videos:
-                logger.error("❌ YouTube API key or search module not available")
+                logger.error("[ERRO] YouTube API key or search module not available")
                 return None
             
             # Extract channel ID
             channel_id = self.extract_channel_id(channel_url)
             if not channel_id:
-                logger.error(f"❌ Could not extract channel ID from: {channel_url}")
+                logger.error(f"[ERRO] Could not extract channel ID from: {channel_url}")
                 return None
             
-            logger.info(f"🔍 Scanning channel: {channel_id}")
+            logger.info(f"[DEBUG] Scanning channel: {channel_id}")
             
             # Create output directory
             channel_dir = self.base_dir / f"channel_{channel_id}"
@@ -166,14 +166,14 @@ class YouTubeChannelScanner:
             )
             
             if output_path and Path(output_path).exists():
-                logger.info(f"✅ Channel scan complete: {output_path}")
+                logger.info(f"[OK] Channel scan complete: {output_path}")
                 return Path(output_path)
             else:
-                logger.error("❌ Channel scan failed")
+                logger.error("[ERRO] Channel scan failed")
                 return None
                 
         except Exception as e:
-            logger.error(f"❌ Error scanning channel: {e}")
+            logger.error(f"[ERRO] Error scanning channel: {e}")
             return None
     
     def get_video_urls(self, video_list_path: Path) -> List[str]:
@@ -188,17 +188,17 @@ class YouTubeChannelScanner:
         """
         try:
             if not video_list_path.exists():
-                logger.error(f"❌ Video list file not found: {video_list_path}")
+                logger.error(f"[ERRO] Video list file not found: {video_list_path}")
                 return []
             
             with open(video_list_path, 'r', encoding='utf-8') as f:
                 urls = [line.strip() for line in f if line.strip()]
             
-            logger.info(f"📋 Found {len(urls)} video URLs")
+            logger.info(f"[INFO] Found {len(urls)} video URLs")
             return urls
             
         except Exception as e:
-            logger.error(f"❌ Error reading video URLs: {e}")
+            logger.error(f"[ERRO] Error reading video URLs: {e}")
             return []
     
     def scan_and_process_channel(self, channel_url: str, process_callback=None) -> Dict[str, Any]:
@@ -238,25 +238,25 @@ class YouTubeChannelScanner:
             failed_count = 0
             
             if process_callback:
-                logger.info(f"🔄 Processing {len(video_urls)} videos...")
+                logger.info(f"[INFO] Processing {len(video_urls)} videos...")
                 
                 for i, video_url in enumerate(video_urls):
                     try:
-                        logger.info(f"📹 Processing video {i+1}/{len(video_urls)}: {video_url}")
+                        logger.info(f"[INFO] Processing video {i+1}/{len(video_urls)}: {video_url}")
                         
                         # Call the processing callback with total and current index
                         result = process_callback(video_url, len(video_urls), i+1)
                         
                         if result:
                             processed_count += 1
-                            logger.info(f"✅ Video processed successfully")
+                            logger.info(f"[OK] Video processed successfully")
                         else:
                             failed_count += 1
-                            logger.warning(f"⚠️ Video processing failed")
+                            logger.warning(f"[AVISO] Video processing failed")
                             
                     except Exception as e:
                         failed_count += 1
-                        logger.error(f"❌ Error processing video {video_url}: {e}")
+                        logger.error(f"[ERRO] Error processing video {video_url}: {e}")
             
             return {
                 'success': True,
@@ -268,7 +268,7 @@ class YouTubeChannelScanner:
             }
             
         except Exception as e:
-            logger.error(f"❌ Error in scan_and_process_channel: {e}")
+            logger.error(f"[ERRO] Error in scan_and_process_channel: {e}")
             return {
                 'success': False,
                 'error': str(e),
@@ -285,7 +285,7 @@ if __name__ == "__main__":
     api_key = os.getenv('YOUTUBE_API_KEY', '')
     
     if not api_key:
-        print("❌ Please set YOUTUBE_API_KEY environment variable")
+        print("[ERRO] Please set YOUTUBE_API_KEY environment variable")
         sys.exit(1)
     
     scanner = YouTubeChannelScanner(api_key)
@@ -295,8 +295,8 @@ if __name__ == "__main__":
     result = scanner.scan_channel(test_url)
     
     if result:
-        print(f"✅ Scan successful: {result}")
+        print(f"[OK] Scan successful: {result}")
         urls = scanner.get_video_urls(result)
-        print(f"📋 Found {len(urls)} videos")
+        print(f"[INFO] Found {len(urls)} videos")
     else:
-        print("❌ Scan failed")
+        print("[ERRO] Scan failed")

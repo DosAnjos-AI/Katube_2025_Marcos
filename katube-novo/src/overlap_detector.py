@@ -43,17 +43,17 @@ class OverlapDetector:
                     "pyannote/segmentation-3.0",
                     token=hf_token
                 )
-                logger.info("✅ Loaded pyannote/segmentation-3.0 model for OSD (with authentication)")
+                logger.info("[OK] Loaded pyannote/segmentation-3.0 model for OSD (with authentication)")
             else:
                 # Try without authentication (for public models)
                 model = Model.from_pretrained("pyannote/segmentation-3.0")
-                logger.info("✅ Loaded pyannote/segmentation-3.0 model for OSD (public)")
+                logger.info("[OK] Loaded pyannote/segmentation-3.0 model for OSD (public)")
                 
             self.pipeline = model
             
         except Exception as e:
-            logger.error(f"❌ Could not load pyannote segmentation model: {e}")
-            logger.info("🔄 Falling back to overlap detection without pyannote")
+            logger.error(f"[ERRO] Could not load pyannote segmentation model: {e}")
+            logger.info("[INFO] Falling back to overlap detection without pyannote")
             self.pipeline = None
     
     def detect_overlap(self, audio_path: Path) -> Dict[str, Any]:
@@ -67,11 +67,11 @@ class OverlapDetector:
             Dictionary with overlap detection results
         """
         if not self.pipeline:
-            logger.error("❌ Pipeline not loaded")
+            logger.error("[ERRO] Pipeline not loaded")
             return {"error": "Model not loaded"}
         
         try:
-            logger.debug(f"🔍 Analyzing overlap in: {audio_path.name}")
+            logger.debug(f"[DEBUG] Analyzing overlap in: {audio_path.name}")
             
             # Load audio and run model inference
             import torchaudio
@@ -99,7 +99,7 @@ class OverlapDetector:
                         overlap_segments.append(segment)
             else:
                 # Fallback: use all segments identified by model
-                logger.warning("🔄 Using fallback overlap detection")
+                logger.warning("[INFO] Using fallback overlap detection")
                 # Simple approach: assume some overlap if multiple speakers likely
                 total_duration = len(waveform[0]) / sample_rate
                 speech_segments = [Segment(0, total_duration)]
@@ -129,12 +129,12 @@ class OverlapDetector:
                 "overlap_count": len(overlap_list)
             }
             
-            logger.debug(f"📊 Overlap analysis: {overlap_percentage:.1f}% overlap, {len(overlap_list)} segments")
+            logger.debug(f"[INFO] Overlap analysis: {overlap_percentage:.1f}% overlap, {len(overlap_list)} segments")
             
             return result
             
         except Exception as e:
-            logger.error(f"❌ Error in overlap detection for {audio_path}: {e}")
+            logger.error(f"[ERRO] Error in overlap detection for {audio_path}: {e}")
             return {"error": str(e)}
     
     def process_segments(self, segments: List[Path], output_dir: Path) -> Dict[str, Any]:
@@ -149,7 +149,7 @@ class OverlapDetector:
             Dictionary with processing results
         """
         if not segments:
-            logger.warning("⚠️ No segments to process")
+            logger.warning("[AVISO] No segments to process")
             return {"error": "No segments provided"}
         
         # Create overlapping directory
@@ -159,7 +159,7 @@ class OverlapDetector:
         overlapping_segments = []
         non_overlapping_segments = []
         
-        logger.info(f"🔍 Processing {len(segments)} segments for overlap detection...")
+        logger.info(f"[DEBUG] Processing {len(segments)} segments for overlap detection...")
         
         for i, segment_path in enumerate(segments):
             try:
@@ -169,7 +169,7 @@ class OverlapDetector:
                 result = self.detect_overlap(segment_path)
                 
                 if "error" in result:
-                    logger.warning(f"⚠️ Error processing {segment_path.name}: {result['error']}")
+                    logger.warning(f"[AVISO] Error processing {segment_path.name}: {result['error']}")
                     continue
                 
                 # Check if segment has significant overlap
@@ -179,13 +179,13 @@ class OverlapDetector:
                     shutil.copy2(segment_path, overlapping_path)
                     overlapping_segments.append(segment_path)
                     
-                    logger.info(f"🔄 Overlapping segment: {segment_path.name} ({result['overlap_percentage']:.1f}% overlap)")
+                    logger.info(f"[INFO] Overlapping segment: {segment_path.name} ({result['overlap_percentage']:.1f}% overlap)")
                 else:
                     non_overlapping_segments.append(segment_path)
-                    logger.debug(f"✅ Non-overlapping segment: {segment_path.name}")
+                    logger.debug(f"[OK] Non-overlapping segment: {segment_path.name}")
                 
             except Exception as e:
-                logger.error(f"❌ Error processing segment {segment_path.name}: {e}")
+                logger.error(f"[ERRO] Error processing segment {segment_path.name}: {e}")
                 continue
         
         # Calculate statistics
@@ -204,7 +204,7 @@ class OverlapDetector:
             "overlapping_dir": str(overlapping_dir)
         }
         
-        logger.info(f"📊 Overlap detection completed:")
+        logger.info(f"[INFO] Overlap detection completed:")
         logger.info(f"   - Total segments: {total_segments}")
         logger.info(f"   - Overlapping: {overlapping_count} ({overlap_percentage:.1f}%)")
         logger.info(f"   - Non-overlapping: {non_overlapping_count}")
@@ -225,7 +225,7 @@ class OverlapDetector:
         result = self.process_segments(segments, output_dir)
         
         if "error" in result:
-            logger.error(f"❌ Error in overlap detection: {result['error']}")
+            logger.error(f"[ERRO] Error in overlap detection: {result['error']}")
             return segments, []  # Return all as clean if error
         
         clean_segments = result["non_overlapping_segments"]
@@ -267,7 +267,7 @@ class OverlapDetector:
                     total_duration += result["total_duration"]
                 
             except Exception as e:
-                logger.warning(f"⚠️ Error analyzing {segment_path.name}: {e}")
+                logger.warning(f"[AVISO] Error analyzing {segment_path.name}: {e}")
                 continue
         
         overall_overlap_percentage = (total_overlap_duration / total_duration) * 100 if total_duration > 0 else 0
