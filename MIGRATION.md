@@ -255,7 +255,13 @@ config = Config()  # Mesma interface, mas sem opcoes GPU
   - Removidos acentos de palavras maiusculas (CRITICO, OBRIGATORIO)
   - Arquivos processados: pipeline.py (127), mos_filter.py (36), e 10 outros
   - VERIFICADO: 0 emojis no codigo Python
-- [ ] ETAPA 05: Core modules
+- [X] ETAPA 05: Core modules - CONCLUIDA
+  - Criado core/resource_manager.py (202 linhas) - gerenciamento de recursos com lazy loading
+  - Criado core/base_processor.py (182 linhas) - classe abstrata base para processadores
+  - Criado core/config.py (109 linhas) - configuracoes centralizadas CPU-first
+  - Atualizado core/__init__.py - exporta ResourceManager, BaseProcessor, Config
+  - Importacoes opcionais: psutil, torch, dotenv (graceful degradation)
+  - VERIFICADO: Todas importacoes e validacoes funcionando
 - [ ] ETAPA 06: Utils
 - [ ] ETAPA 07-11: Stages modularizadas
 - [ ] ETAPA 12: Orchestrator
