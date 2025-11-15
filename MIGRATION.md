@@ -238,7 +238,10 @@ config = Config()  # Mesma interface, mas sem opcoes GPU
 ## Status da Migracao
 
 - [X] ETAPA 01: Setup inicial - CONCLUIDA
-- [ ] ETAPA 02: Limpeza
+- [X] ETAPA 02: Limpeza - CONCLUIDA
+  - app.py movido para .backup/ (Flask nao usado)
+  - Nenhum import quebrado encontrado (codigo ja correto)
+  - Zero referencias a 'from src.' no codigo ativo
 - [ ] ETAPA 03: Remover GPU/CUDA
 - [ ] ETAPA 04: Remover emojis
 - [ ] ETAPA 05: Core modules
