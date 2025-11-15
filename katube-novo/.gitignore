@@ -160,18 +160,39 @@ cython_debug/
 # VS Code
 .vscode/
 
-# Project specific
+# Project specific - Katube 2025
 output/
 temp/
+temp_segments/
 downloads/
+audios_baixados/
 *.flac
 *.wav
 *.mp3
 *.mp4
 *.rttm
 pipeline.log
-*.json
+katube.log
+logs/
 
-# Model cache
+# Datasets gerados
+dataset.csv
+dataset_*.csv
+*.tsv
+
+# JSON configs (exceto .json.example)
+*.json
+!*.json.example
+
+# Model cache e downloads HuggingFace
 .cache/
 models/
+hub/
+torch/hub/
+
+# Arquivos temporários de processamento
+*_temp.*
+*_intermediate.*
+
+# Pyannote auth tokens (não commitar!)
+.pyannote/
