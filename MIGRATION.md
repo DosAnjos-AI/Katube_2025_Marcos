@@ -262,7 +262,14 @@ config = Config()  # Mesma interface, mas sem opcoes GPU
   - Atualizado core/__init__.py - exporta ResourceManager, BaseProcessor, Config
   - Importacoes opcionais: psutil, torch, dotenv (graceful degradation)
   - VERIFICADO: Todas importacoes e validacoes funcionando
-- [ ] ETAPA 06: Utils
+- [X] ETAPA 06: Utils - CONCLUIDA
+  - Criado utils/paths.py (184 linhas) - gerenciamento cross-platform com pathlib
+  - Criado utils/logging_config.py (175 linhas) - logging padronizado com rotacao
+  - Copiado utils/naming.py (181 linhas) - utilitarios de nomenclatura
+  - Atualizado utils/__init__.py (13 linhas) - exporta 6 funcoes/classes
+  - PathManager: ensure_path, get_project_root, resolve_relative, safe_join
+  - Logging: setup_logging, get_logger, configure_third_party_loggers
+  - VERIFICADO: Todas validacoes passaram
 - [ ] ETAPA 07-11: Stages modularizadas
 - [ ] ETAPA 12: Orchestrator
 - [ ] ETAPA 13: Documentacao
