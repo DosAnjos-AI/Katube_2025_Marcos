@@ -1,0 +1,39 @@
+# ============================================================================
+# FASE 02: Audio Processing Libraries
+# ============================================================================
+# Bibliotecas de processamento de áudio
+# Instalar APÓS requirements_fase_01.txt
+# ============================================================================
+
+# Audio I/O e processamento
+librosa==0.11.0
+soundfile==0.13.1
+audioread==3.0.1
+soxr==1.0.0
+
+# Audio análise e features
+pyloudnorm==0.1.1
+webrtcvad==2.0.10
+scipy>=1.10.0,<1.17.0
+
+# Dependências do librosa
+numba>=0.57.0,<0.63.0
+decorator>=4.3.0
+joblib>=1.2.0
+lazy_loader>=0.3
+msgpack>=1.0
+pooch>=1.0
+scikit-learn>=1.3.0,<1.8.0
+
+# Audio utilities
+pydub==0.25.1
+resampy>=0.4.0
+
+# ============================================================================
+# NOTAS:
+# - librosa: análise de áudio e extração de features
+# - soundfile: leitura/escrita WAV/FLAC sem dependências externas
+# - webrtcvad: Voice Activity Detection (VAD)
+# - pyloudnorm: normalização de loudness (LUFS)
+# - scipy: processamento de sinais (find_peaks, etc)
+# ============================================================================

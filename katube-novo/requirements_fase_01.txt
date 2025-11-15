@@ -1,0 +1,27 @@
+# ============================================================================
+# FASE 01: PyTorch CPU-Only
+# ============================================================================
+# IMPORTANTE: Instalar PRIMEIRO antes de qualquer outra dependência
+# PyTorch CPU-only (sem CUDA) - Reduz download e espaço em disco
+# ============================================================================
+
+# PyTorch CPU (versão 2.8.0 compatível com Python 3.10+)
+torch==2.8.0
+torchaudio==2.8.0
+
+# Instalação via pip index (CPU-only):
+# pip install torch==2.8.0 torchaudio==2.8.0 --index-url https://download.pytorch.org/whl/cpu
+
+# Dependências core do PyTorch
+numpy>=1.24.0,<2.4.0
+filelock>=3.9.0
+networkx>=3.0
+sympy>=1.12
+typing_extensions>=4.8.0
+
+# ============================================================================
+# ATENÇÃO:
+# - NÃO instale versões CUDA (economiza ~2GB de download)
+# - Verifique instalação: python -c "import torch; print(f'CPU: {torch.cuda.is_available()}')"
+# - Deve retornar: "CPU: False" (esperado para CPU-only)
+# ============================================================================
